@@ -1,5 +1,8 @@
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Depends
-from models import Task
+from models import STaskAdd, STask, STaskId
+from repository import TaskRepository
 
 
 router = APIRouter(
@@ -10,25 +13,20 @@ router = APIRouter(
 
 local_database = []
 
-def common_parameters(q: str | None = None, skip: int = 0, limit: int = 100):
-        return {"q": q, "skip": skip, "limit": limit}
 
 @router.get("")
-def get_tasks(pagination: dict = Depends(common_parameters)):
-    skip = pagination["skip"]
-    limit = pagination["limit"]
-    return common_parameters[skip : skip + limit]
+async def get_tasks() -> list[STask]:
+    tasks = await TaskRepository.find_all()
+    return tasks
 
 @router.post("")
-def create_task(task: Task):
-    new_task = task.model_dump()
-    new_task["id"] = len(local_database) + 1
-    local_database.append(new_task)
+async def create_task(task: Annotated[STaskAdd, Depends()],
+                      ) -> STaskId:
+    task_id = await TaskRepository.add_one(task)
+    return {"ok": True, "task_id": task_id}
     
-@router.delete('/{task_id}')
-def delete_task(task_id: int):
-    for idx, t in enumerate(local_database):
-        if t['id'] == task_id:
-            del local_database[idx]
-            return {'message': 'Задача {idx} удалена'}
-    raise HTTPException(status_code=404, detail="Задача не найдена")
+# @router.delete('')
+# async def delete_task(task_delete: Annotated[STaskId, Depends()]):
+#     task_del = await TaskRepository.delattr(task_delete)
+#     return {'ok': 'Задача удалена', "task_del": task_del}
+           
