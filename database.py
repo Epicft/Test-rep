@@ -20,7 +20,7 @@ class TaskOrm(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     description: Mapped[Optional[str]]
-    is_completed: bool = False
+    is_completed: Mapped[bool] = mapped_column(default=False)
     
 
 async def create_tables():
