@@ -3,7 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from database import TaskOrm, new_session
 from models import STask, STaskAdd
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 
 class TaskRepository:
@@ -52,7 +52,7 @@ class TaskRepository:
     async def mark_is_complete(
         cls,
         task_id: int
-    ) -> bool:
+    ) -> STask | None:
         try:
             async with new_session() as session:
                 result = await session.execute(
@@ -60,10 +60,11 @@ class TaskRepository:
                 )
                 task = result.scalars().one_or_none()
                 if not task:
-                    return False
+                    return None
                 task.is_completed = True
                 await session.commit()
-                return True
+                await session.refresh(task)
+                return STask.model_validate(task)
         except SQLAlchemyError as e:
             await session.rollback()
             raise HTTPException(
@@ -92,6 +93,13 @@ class TaskRepository:
                 detail=f"Database error when finding task: {str(e)}"
             )
 
-    # @classmethod
-    # async def delattr():
-        # pass
+    # @staticmethod
+    # async def delete_task(task_id: int) -> bool:
+    #     """Удаляет задачу по ID и возвращает True при успехе"""
+    
+    #     result = await session.execute(delete(TaskOrm).where(TaskOrm.id == task_id))
+    #     return result.rowcount > 0
+        
+    #     print(f"Попытка удалить задачу с ID: {task_id}")
+    #     
+    #     return True

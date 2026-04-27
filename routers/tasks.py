@@ -25,20 +25,26 @@ async def create_task(task: Annotated[STaskAdd, Depends()]
     task_id = await TaskRepository.add_one(task)
     return {"ok": True, "task_id": task_id}
 
-@router.post("/{task_id}/complete")
+@router.put("/{task_id}/complete")
 async def complete_task(task_id: int) -> STask:
-    success = await TaskRepository.mark_is_complete(task_id)
-    if not success:
+    updated_task = await TaskRepository.mark_is_complete(task_id)
+    if updated_task is None:
         raise HTTPException(
             status_code=404,
             detail="Task not found"
         )
-    completed_task = await TaskRepository.find_by_id(task_id)
-    return completed_task    
+    return updated_task    
     
     
-# @router.delete('')
-# async def delete_task(task_delete: Annotated[STaskId, Depends()]):
-#     task_del = await TaskRepository.delattr(task_delete)
-#     return {'ok': 'Задача удалена', "task_del": task_del}
-           
+# @router.delete("/{task_id}")
+# async def del_task(task_id: int):
+#     try:
+#         # Создаём экземпляр репозитория
+#         repo = TaskRepository()
+#         deleted_task = await repo.delete_task(task_id)
+#         if deleted_task:
+#             return {"ok": True, "message": "Task deleted"}
+#         else:
+#             raise HTTPException(status_code=404, detail="Task not found")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error deleting task: {str(e)}") 
