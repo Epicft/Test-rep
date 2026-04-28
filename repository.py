@@ -93,13 +93,13 @@ class TaskRepository:
                 detail=f"Database error when finding task: {str(e)}"
             )
 
-    # @staticmethod
-    # async def delete_task(task_id: int) -> bool:
-    #     """Удаляет задачу по ID и возвращает True при успехе"""
-    
-    #     result = await session.execute(delete(TaskOrm).where(TaskOrm.id == task_id))
-    #     return result.rowcount > 0
-        
-    #     print(f"Попытка удалить задачу с ID: {task_id}")
-    #     
-    #     return True
+    @staticmethod
+    async def delete_task(task_id: int) -> bool:
+        try:
+            async with new_session() as session:
+                result = await session.execute(delete(TaskOrm).where(TaskOrm.id == task_id))
+                return result.rowcount > 0
+        except SQLAlchemyError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Database error when finding task: {str(e)}")

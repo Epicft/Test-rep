@@ -138,6 +138,66 @@ class TaskManager {
 }
 
 // Инициализация приложения после загрузки страницы
-document.addEventListener('DOMContentLoaded', () => {
-    window.taskManager = new TaskManager();
+document.addEventListener('DOMContentLoaded', function() {
+    const taskForm = document.getElementById('taskForm');
+    const tasksContainer = document.getElementById('tasksContainer');
+
+    taskForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const taskName = document.getElementById('taskName').value;
+        const taskDescription = document.getElementById('taskDescription').value;
+
+        try {
+            const response = await fetch('/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: taskName,
+            description: taskDescription || null
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Задача создана:', result);
+
+            // Обновляем список задач
+            loadTasks();
+
+            // Очищаем форму
+            taskForm.reset();
+        } catch (error) {
+            console.error('Ошибка при добавлении задачи:', error);
+            alert('Ошибка при добавлении задачи');
+        }
+    });
+
+    async function loadTasks() {
+        try {
+            const response = await fetch('/tasks');
+            const data = await response.json();
+
+            tasksContainer.innerHTML = '';
+            data.tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <h3>${task.name}</h3>
+                    ${task.description ? `<p>${task.description}</p>` : ''}
+            `;
+                tasksContainer.appendChild(taskElement);
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки задач:', error);
+        }
+    }
+
+    // Загружаем задачи при загрузке страницы
+    loadTasks();
 });

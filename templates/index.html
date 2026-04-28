@@ -10,6 +10,12 @@
     <div class="container">
         <h1>Task Manager</h1>
 
+        <!-- Статистика -->
+        <div class="stats">
+            <p>Всего задач: {{ total_tasks }}</p>
+            <p>Завершено: {{ completed_tasks }}</p>
+        </div>
+
         <!-- Форма добавления задачи -->
         <div class="add-task">
             <h2>Добавить задачу</h2>
@@ -24,7 +30,18 @@
         <div class="tasks-list">
             <h2>Список задач</h2>
             <div id="tasksContainer">
-                <!-- Задачи будут загружаться здесь -->
+                {% if tasks %}
+                    {% for task in tasks %}
+                        <div class="task-item {% if task.is_completed %}completed{% endif %}">
+                            <h3>{{ task.name }}</h3>
+                            {% if task.description %}
+                                <p>{{ task.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+                {% else %}
+                    <p class="no-tasks">Задач пока нет</p>
+                {% endif %}
             </div>
         </div>
     </div>
