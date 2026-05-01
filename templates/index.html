@@ -1,51 +1,99 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>{{ page_title }}</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+    <script src="../static/js/app.js"></script>
+
 </head>
+
 <body>
-    <div class="container">
-        <h1>Task Manager</h1>
+    <h1>{{ page_title }}</h1>
 
-        <!-- Статистика -->
-        <div class="stats">
-            <p>Всего задач: {{ total_tasks }}</p>
-            <p>Завершено: {{ completed_tasks }}</p>
-        </div>
+    <!-- Форма добавления задачи -->
+    <form id="taskForm">
+        <input type="text" id="taskName" placeholder="Название задачи" required>
+        <input type="text" id="taskDescription" placeholder="Описание (опционально)">
+        <button type="submit">Добавить задачу</button>
+    </form>
 
-        <!-- Форма добавления задачи -->
-        <div class="add-task">
-            <h2>Добавить задачу</h2>
-            <form id="taskForm">
-                <input type="text" id="taskName" placeholder="Название задачи" required>
-                <textarea id="taskDescription" placeholder="Описание"></textarea>
-                <button type="submit">Добавить задачу</button>
-            </form>
-        </div>
+    <!-- Контейнер для списка задач -->
+    <div id="tasksContainer">
+        {% if tasks %}
 
-        <!-- Список задач -->
-        <div class="tasks-list">
-            <h2>Список задач</h2>
-            <div id="tasksContainer">
-                {% if tasks %}
-                    {% for task in tasks %}
-                        <div class="task-item {% if task.is_completed %}completed{% endif %}">
-                            <h3>{{ task.name }}</h3>
-                            {% if task.description %}
-                                <p>{{ task.description }}</p>
+        {% for task in tasks %}
+        <div class="task-item {% if task.is_completed %}completed{% endif %}">
+            <div class="task-content">
+                <h3>{{ task.name }}</h3>
+                {% if task.description %}
+                <p><strong>Описание:</strong> {{ task.description }}</p>
                 {% endif %}
+                <p><strong>Статус:</strong>
+                    {% if task.is_completed %}
+                    <span style="color: green;">Выполнена</span>
+                    {% else %}
+                    <span style="color: orange;">В работе</span>
+                    {% endif %}
+                </p>
             </div>
-            {% endfor %}
-                {% else %}
-                    <p class="no-tasks">Задач пока нет</p>
+            <div class="task-actions">
+                {% if not task.is_completed %}
+                <button onclick="completeTask({{ task.id }})">Завершить</button>
                 {% endif %}
+                <button onclick="deleteTask({{ task.id }})">Удалить</button>
             </div>
         </div>
+        {% endfor %}
+        {% else %}
+        <p>Задач пока нет. Добавьте первую задачу!</p>
+        {% endif %}
     </div>
 
-    <script src="/static/js/app.js"></script>
+    <!--   <script>
+        // Инициализация менеджера задач
+        const taskManager = new TaskManager();
+
+        // Функция завершения задачи
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch(`/tasks/${taskId}/complete`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    await taskManager.loadTasks();
+                } else {
+                    alert('Ошибка при завершении задачи');
+                }
+            } catch (error) {
+                console.error('Error completing task:', error);
+                alert('Ошибка сети при завершении задачи');
+            }
+        }
+
+        // Функция удаления задачи
+        async function deleteTask(taskId) {
+            const confirmDelete = confirm('Вы уверены, что хотите удалить эту задачу?');
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    await taskManager.loadTasks();
+                } else {
+                    alert('Ошибка при удалении задачи');
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Ошибка сети при удалении задачи');
+            }
+        }
+    </script> -->
 </body>
+
 </html>

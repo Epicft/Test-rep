@@ -16,9 +16,11 @@ async def get_tasks() -> list[STask]:
     return tasks
 
 @router.post("")
-async def create_task(task: Annotated[STaskAdd, Depends()]
+async def create_task(task: STaskAdd
 ) -> STaskId:
+    print(f"{task} --- это таска")
     task_id = await TaskRepository.add_one(task)
+    print(f"{task} --- это таска")
     return {"ok": True, "task_id": task_id}
 
 @router.put("/{task_id}/complete")

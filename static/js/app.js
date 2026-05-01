@@ -21,7 +21,7 @@ class TaskManager {
         const description = document.getElementById('taskDescription').value;
 
         try {
-            const response = await fetch(`${this.apiBase}`, {
+            const response = await fetch('${this.apiBase}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -181,10 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadTasks() {
         try {
             const response = await fetch('/tasks');
+            console.log(response)
             const data = await response.json();
+            console.log(data)
 
-            tasksContainer.innerHTML = '';
-            data.tasks.forEach(task => {
+            //tasksContainer.innerHTML = '';
+            data.forEach(task => {
                 const taskElement = document.createElement('div');
                 taskElement.className = 'task-item';
                 taskElement.innerHTML = `

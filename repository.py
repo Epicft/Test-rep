@@ -31,22 +31,30 @@ class TaskRepository:
         skip: int = 0,
         limit: int = 100,
         status: str | None = None
-    ) -> list[STask]:
+    ) -> list[dict]:
         try:
             async with new_session() as session:
-                query = select(TaskOrm)
-                if status:
-                    query = query.where(TaskOrm.status == status)
-                query = query.offset(skip).limit(limit)
-                result = await session.execute(query)
-                task_models = result.scalars().all()
-                task_schemas = [STask.model_validate(task_model) for task_model in task_models]
-                return task_schemas
-        except SQLAlchemyError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Database query error:{str(e)}"
-            )
+                print("Выполняем запрос к БД...")
+                result = await session.execute(select(TaskOrm))
+                tasks_orm = result.scalars().all()
+                print(f"Получено задач из БД: {len(tasks_orm)}")
+
+                # Проверяем преобразование каждой задачи
+                taskslist = []
+                for i, task in enumerate(tasks_orm):
+                    try:
+                        task_dict = task.to_dict()
+                        print(f"Задача {i} успешно преобразована: {task_dict}")
+                        taskslist.append(task_dict)
+                    except Exception as e:
+                        print(f"Ошибка преобразования задачи {i}: {e}")
+                        raise
+
+            print("Все задачи успешно преобразованы")
+            return taskslist
+        except Exception as e:
+            print(f"Критическая ошибка в get_all_tasks: {e}")
+            raise
             
     @classmethod
     async def mark_is_complete(
@@ -64,7 +72,7 @@ class TaskRepository:
                 task.is_completed = True
                 await session.commit()
                 await session.refresh(task)
-                return STask.model_validate(task)
+                return task.to_dict()
         except SQLAlchemyError as e:
             await session.rollback()
             raise HTTPException(
@@ -86,7 +94,7 @@ class TaskRepository:
                 task = result.scalars().one_or_none()
                 if not task:
                     return None
-                return STask.model_validate(task)
+                return task.to_dict()
         except SQLAlchemyError as e:
             raise HTTPException(
                 status_code=500,
@@ -97,8 +105,14 @@ class TaskRepository:
     async def delete_task(task_id: int) -> bool:
         try:
             async with new_session() as session:
-                result = await session.execute(delete(TaskOrm).where(TaskOrm.id == task_id))
-                return result.rowcount > 0
+                result = await session.execute(
+                    select(TaskOrm).where(TaskOrm.id == task_id)
+                )
+                task_delete = result.scalar_one_or_none()
+                
+                await session.delete(task_delete)
+                await session.commit()
+                return True
         except SQLAlchemyError as e:
             raise HTTPException(
                 status_code=500,
