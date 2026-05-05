@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ru">
 
 <head>
@@ -51,49 +51,6 @@
         {% endif %}
     </div>
 
-    <!--   <script>
-        // Инициализация менеджера задач
-        const taskManager = new TaskManager();
-
-        // Функция завершения задачи
-        async function completeTask(taskId) {
-            try {
-                const response = await fetch(`/tasks/${taskId}/complete`, {
-                    method: 'PUT'
-                });
-
-                if (response.ok) {
-                    await taskManager.loadTasks();
-                } else {
-                    alert('Ошибка при завершении задачи');
-                }
-            } catch (error) {
-                console.error('Error completing task:', error);
-                alert('Ошибка сети при завершении задачи');
-            }
-        }
-
-        // Функция удаления задачи
-        async function deleteTask(taskId) {
-            const confirmDelete = confirm('Вы уверены, что хотите удалить эту задачу?');
-            if (!confirmDelete) return;
-
-            try {
-                const response = await fetch(`/tasks/${taskId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    await taskManager.loadTasks();
-                } else {
-                    alert('Ошибка при удалении задачи');
-                }
-            } catch (error) {
-                console.error('Error deleting task:', error);
-                alert('Ошибка сети при удалении задачи');
-            }
-        }
-    </script> -->
 </body>
 
 </html>

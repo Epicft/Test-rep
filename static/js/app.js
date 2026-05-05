@@ -121,15 +121,13 @@ class TaskManager {
     // Метод удаления задачи
     async deleteTask(taskId) {
         try {
-            // Поскольку в вашем API нет DELETE, используем GET для получения задачи
-            // и затем удаляем её через отдельный эндпоинт (если есть)
-            // Либо имитируем удаление локально после подтверждения
+            
             const confirmDelete = confirm('Вы уверены, что хотите удалить эту задачу?');
             if (!confirmDelete) return;
 
-            // В текущей реализации API нет эндпоинта DELETE — нужно добавить его в роутер
+            
             alert('Функция удаления пока не реализована в API');
-            // Здесь можно добавить запрос к новому эндпоинту DELETE /tasks/{id}
+            
         } catch (error) {
             console.error('Error deleting task:', error);
             alert('Ошибка сети при удалении задачи');
@@ -177,28 +175,119 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Ошибка при добавлении задачи');
         }
     });
-
+    
     async function loadTasks() {
-        try {
-            const response = await fetch('/tasks');
-            console.log(response)
-            const data = await response.json();
-            console.log(data)
+    try {
+        const response = await fetch('/tasks');
+        console.log(response);
+        const data = await response.json();
+        console.log(data);
 
-            //tasksContainer.innerHTML = '';
-            data.forEach(task => {
-                const taskElement = document.createElement('div');
-                taskElement.className = 'task-item';
-                taskElement.innerHTML = `
-                    <h3>${task.name}</h3>
-                    ${task.description ? `<p>${task.description}</p>` : ''}
-            `;
-                tasksContainer.appendChild(taskElement);
-            });
-        } catch (error) {
-            console.error('Ошибка загрузки задач:', error);
+        tasksContainer.innerHTML = '';
+
+        if (data.length === 0) {
+            tasksContainer.innerHTML = '<p>Задач пока нет. Добавьте первую задачу!</p>';
+            return;
         }
+
+        data.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = `task-item ${task.is_completed ? 'completed' : ''}`;
+
+
+            // Создаём блок с содержимым задачи
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'task-content';
+
+            let contentHTML = `<h3>${task.name}</h3>`;
+
+            if (task.description) {
+                contentHTML += `<p><strong>Описание:</strong> ${task.description}</p>`;
+            }
+
+            contentHTML += `
+                <p><strong>Статус:</strong>
+                    <span style="color: ${task.is_completed ? 'green' : 'orange'};">
+                ${task.is_completed ? 'Выполнена' : 'В работе'}
+            </span></p>
+            `;
+
+            contentDiv.innerHTML = contentHTML;
+
+            // Создаём блок с кнопками действий
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'task-actions';
+
+            let actionsHTML = '';
+
+            // Кнопка «Завершить» — показываем, только если задача не выполнена
+            if (!task.is_completed) {
+                actionsHTML += `
+                    <button onclick="completeTask(${task.id})" class="complete-btn">
+                Завершить
+            </button>
+                `;
+            }
+
+            // Кнопка «Удалить» — всегда видна
+            actionsHTML += `
+                <button onclick="deleteTask(${task.id})" class="delete-btn">
+                Удалить
+            </button>
+            `;
+
+            actionsDiv.innerHTML = actionsHTML;
+
+            // Добавляем блоки в основной элемент задачи
+            taskElement.appendChild(contentDiv);
+            taskElement.appendChild(actionsDiv);
+
+            tasksContainer.appendChild(taskElement);
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки задач:', error);
     }
+    
+    // Функция завершения задачи
+        window.completeTask = async function(taskId) {
+            try {
+                const response = await fetch(`/tasks/${taskId}/complete`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    await loadTasks();
+                } else {
+                    alert('Ошибка при завершении задачи');
+                }
+            } catch (error) {
+                console.error('Error completing task:', error);
+                alert('Ошибка сети при завершении задачи');
+            }
+        }
+    
+
+        // Функция удаления задачи
+        window.deleteTask = async function(taskId) {
+            const confirmDelete = confirm('Вы уверены, что хотите удалить эту задачу?');
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    await loadTasks();
+                } else {
+                    alert('Ошибка при удалении задачи');
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Ошибка сети при удалении задачи');
+            }
+        }
+}
 
     // Загружаем задачи при загрузке страницы
     loadTasks();

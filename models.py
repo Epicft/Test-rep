@@ -10,6 +10,8 @@ class STaskAdd(BaseModel):
 
 class STask(STaskAdd):
     id: int
+    name: str
+    description: Optional[str] = None
     is_completed: bool = False
     
     model_config = ConfigDict(from_attributes=True)

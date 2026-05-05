@@ -34,26 +34,13 @@ class TaskRepository:
     ) -> list[dict]:
         try:
             async with new_session() as session:
-                print("Выполняем запрос к БД...")
                 result = await session.execute(select(TaskOrm))
                 tasks_orm = result.scalars().all()
-                print(f"Получено задач из БД: {len(tasks_orm)}")
-
-                # Проверяем преобразование каждой задачи
-                taskslist = []
-                for i, task in enumerate(tasks_orm):
-                    try:
-                        task_dict = task.to_dict()
-                        print(f"Задача {i} успешно преобразована: {task_dict}")
-                        taskslist.append(task_dict)
-                    except Exception as e:
-                        print(f"Ошибка преобразования задачи {i}: {e}")
-                        raise
-
-            print("Все задачи успешно преобразованы")
-            return taskslist
+                tasks_pydantic = [STask.model_validate(task, from_attributes=True) for task in tasks_orm]
+                tasks_dict = [task.model_dump() for task in tasks_pydantic]
+            return tasks_dict
         except Exception as e:
-            print(f"Критическая ошибка в get_all_tasks: {e}")
+            print(f"Критическая ошибка в def find_all: {e}")
             raise
             
     @classmethod
@@ -72,7 +59,7 @@ class TaskRepository:
                 task.is_completed = True
                 await session.commit()
                 await session.refresh(task)
-                return task.to_dict()
+                return task
         except SQLAlchemyError as e:
             await session.rollback()
             raise HTTPException(
@@ -94,7 +81,7 @@ class TaskRepository:
                 task = result.scalars().one_or_none()
                 if not task:
                     return None
-                return task.to_dict()
+                return task
         except SQLAlchemyError as e:
             raise HTTPException(
                 status_code=500,
